@@ -1,9 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import json
-import plotly.express as px
-
 from sqlmodel import SQLModel, Session, select
 from backend.models import (
     Transaction,
@@ -12,8 +9,6 @@ from backend.models import (
     TransactionUpdate,
 )
 from backend.database import create_db_and_tables, engine
-
-from joblib import dump, load
 
 
 @asynccontextmanager
@@ -41,12 +36,6 @@ async def lifespan(app: FastAPI):
     yield
 
 
-def sqlmodel_to_df(objs: list[SQLModel]) -> pd.DataFrame:
-    """Convert a SQLModel objects into a pandas DataFrame."""
-    records = [i.model_dump() for i in objs]
-    df = pd.DataFrame.from_records(records)
-    return df
-
 @app.get("/api/get_all_transactions", response_model=list[TransactionRead])
 def get_all_transactions():
     with Session(engine) as session:
@@ -68,7 +57,9 @@ def get_transaction(id: int):
 def create_transaction(transaction: TransactionCreate):
     with Session(engine) as session:
         transaction = Transaction(
-            customer_name=transaction.customer_name, datetime=transaction.datetime
+            customer_id=transaction.customer_id,
+            timestamp=transaction.timestamp,
+            price=transaction.price,
         )
         session.add(transaction)
         session.commit()
